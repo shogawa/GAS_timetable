@@ -19,6 +19,7 @@ const CONFIG = {
   SPECIAL_DAY_SHEET_NAME: 'special',
   INDIVIDUAL_CHANGES_SHEET_NAME: 'kobetsu',
   SETTING_SHEET_NAME: 'setting',
+  DEVICE_SETTING_SHEET_NAME: 'device_setting',
   TERM_SHEET_NAME: 'term',
 
   // 学校の時程に合わせて変更してください。
@@ -83,10 +84,15 @@ const DEFAULT_DISPLAY_SETTINGS = {
   showInstallHint: true,
   showTermLabel: true,
   currentTerm: '',
+  legacyTextSize: 'normal',
+  device: '',
+  deviceLabel: '',
 };
 
 function doGet(e) {
   const key = e?.parameter?.k || '';
+  const device = normalizeDeviceId(e?.parameter?.device || '');
+  const useLegacy = e && e.parameter && e.parameter.legacy === '1';
 
   if (CONFIG.SECRET_KEY && key !== CONFIG.SECRET_KEY) {
     return HtmlService
@@ -95,18 +101,24 @@ function doGet(e) {
   }
 
   if (e?.parameter?.manifest === '1') {
-    return createWebAppManifestOutput(key);
+    return createWebAppManifestOutput(key, device, useLegacy);
   }
 
-  const settings = getSafeDashboardSettings();
-  const useLegacy = e && e.parameter && e.parameter.legacy === '1';
+  const settings = getSafeDashboardSettings(device);
   const template = HtmlService.createTemplateFromFile(useLegacy ? 'legacy' : 'index');
   template.appName = settings.appName;
   template.themeColor = settings.themeColor;
   template.backgroundColor = settings.backgroundColor;
-  template.manifestUrl = `?manifest=1&k=${encodeURIComponent(key)}`;
+  template.manifestUrl = buildRelativeUrl({
+    manifest: '1',
+    k: CONFIG.SECRET_KEY ? key : '',
+    device,
+    legacy: useLegacy ? '1' : '',
+  });
   template.faviconHref = getFaviconHref(settings);
   template.appleTouchIconHref = getAppleTouchIconHref(settings);
+  template.device = device;
+  template.deviceLabel = settings.deviceLabel;
 
   const output = template
     .evaluate()
@@ -122,19 +134,27 @@ function doGet(e) {
   return output;
 }
 
-function getSafeDashboardSettings() {
+function getSafeDashboardSettings(device) {
   try {
-    return getDashboardSettingsFromSheet();
+    return getDashboardSettingsFromSheet(device);
   } catch (error) {
-    return { ...DEFAULT_DISPLAY_SETTINGS };
+    const deviceId = normalizeDeviceId(device);
+    return {
+      ...DEFAULT_DISPLAY_SETTINGS,
+      device: deviceId,
+      deviceLabel: deviceId,
+    };
   }
 }
 
-function createWebAppManifestOutput(key) {
-  const settings = getSafeDashboardSettings();
-  const startUrl = CONFIG.SECRET_KEY
-    ? `?k=${encodeURIComponent(key)}`
-    : './';
+function createWebAppManifestOutput(key, device, useLegacy) {
+  const deviceId = normalizeDeviceId(device);
+  const settings = getSafeDashboardSettings(deviceId);
+  const startUrl = buildRelativeUrl({
+    k: CONFIG.SECRET_KEY ? key : '',
+    device: deviceId,
+    legacy: useLegacy ? '1' : '',
+  });
 
   const manifest = {
     name: settings.appName,
@@ -151,6 +171,14 @@ function createWebAppManifestOutput(key) {
   return ContentService
     .createTextOutput(JSON.stringify(manifest, null, 2))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function buildRelativeUrl(params) {
+  const pairs = Object.keys(params || {})
+    .filter(key => params[key] !== null && params[key] !== undefined && params[key] !== '')
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+
+  return pairs.length ? `?${pairs.join('&')}` : './';
 }
 
 function getFaviconHref(settings) {
@@ -260,20 +288,22 @@ function clearDashboardCache() {
   };
 }
 
-function getDashboardData() {
+function getDashboardData(device) {
   const now = new Date();
+  const deviceId = normalizeDeviceId(device);
+  const settings = getDashboardSettingsFromSheet(deviceId);
 
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   return {
-    today: buildDayDashboardData(now),
-    tomorrow: buildDayDashboardData(tomorrow),
-    settings: getDashboardSettingsFromSheet(),
+    today: buildDayDashboardData(now, settings),
+    tomorrow: buildDayDashboardData(tomorrow, settings),
+    settings,
   };
 }
 
-function buildDayDashboardData(targetDate) {
+function buildDayDashboardData(targetDate, settings = null) {
   const calendar = CONFIG.CALENDAR_ID === 'primary'
     ? CalendarApp.getDefaultCalendar()
     : CalendarApp.getCalendarById(CONFIG.CALENDAR_ID);
@@ -288,7 +318,7 @@ function buildDayDashboardData(targetDate) {
     .sort((a, b) => a.startMs - b.startMs);
 
   const actualDay = targetDate.getDay();
-  const term = getTermForDate(targetDate);
+  const term = getTermForDate(targetDate, settings);
   const dayPlan = getTodayPlan(targetDate);
 
   // termシートで「休業」扱いになっている日は、specialシートに明示的な行がない限り授業なしにする。
@@ -367,17 +397,16 @@ function createEmptyTimetable() {
   };
 }
 
-function getTermForDate(date) {
+function getTermForDate(date, settings = null) {
+  const activeSettings = settings || getDashboardSettingsFromSheet();
+  const manualTerm = normalizeTermId(activeSettings.currentTerm);
   const cache = CacheService.getScriptCache();
-  const cacheKey = makeCacheKey(`term:${formatDateKey(date)}`);
+  const cacheKey = makeCacheKey(`term:${formatDateKey(date)}:${manualTerm || 'auto'}`);
   const cached = cache.get(cacheKey);
 
   if (cached) {
     return JSON.parse(cached);
   }
-
-  const settings = getDashboardSettingsFromSheet();
-  const manualTerm = normalizeTermId(settings.currentTerm);
 
   if (manualTerm) {
     const manual = findTermDefinitionById(manualTerm) || createTermObject(manualTerm, 'setting指定', '');
@@ -508,9 +537,10 @@ function normalizeTermId(value) {
     .replace(/\s+/g, '');
 }
 
-function getDashboardSettingsFromSheet() {
+function getDashboardSettingsFromSheet(device) {
+  const deviceId = normalizeDeviceId(device);
   const cache = CacheService.getScriptCache();
-  const cacheKey = makeCacheKey('settings');
+  const cacheKey = makeCacheKey(`settings:${deviceId || 'default'}`);
   const cached = cache.get(cacheKey);
 
   if (cached) {
@@ -521,25 +551,47 @@ function getDashboardSettingsFromSheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.SETTING_SHEET_NAME);
 
-  if (!sheet) {
-    cache.put(cacheKey, JSON.stringify(settings), 300);
-    return settings;
+  if (sheet) {
+    const values = sheet.getDataRange().getValues();
+    const rows = values.slice(1);
+
+    rows.forEach(row => {
+      applySettingValue(settings, row[0], row[1]);
+    });
   }
+
+  applyDeviceSettingsFromSheet(ss, settings, deviceId);
+
+  const normalized = normalizeDashboardSettings(settings);
+  normalized.device = deviceId;
+  normalized.deviceLabel = normalized.deviceLabel || deviceId;
+  cache.put(cacheKey, JSON.stringify(normalized), 300);
+
+  return normalized;
+}
+
+function applyDeviceSettingsFromSheet(ss, settings, deviceId) {
+  if (!deviceId) return;
+
+  const sheet = ss.getSheetByName(CONFIG.DEVICE_SETTING_SHEET_NAME);
+  if (!sheet) return;
 
   const values = sheet.getDataRange().getValues();
   const rows = values.slice(1);
 
   rows.forEach(row => {
-    const key = String(row[0] || '').trim();
-    if (!key || !Object.prototype.hasOwnProperty.call(settings, key)) return;
+    const rowDevice = normalizeDeviceId(row[0]);
+    if (rowDevice !== deviceId) return;
 
-    settings[key] = parseSettingValue(key, row[1], settings[key]);
+    applySettingValue(settings, row[1], row[2]);
   });
+}
 
-  const normalized = normalizeDashboardSettings(settings);
-  cache.put(cacheKey, JSON.stringify(normalized), 300);
+function applySettingValue(settings, keyValue, rawValue) {
+  const key = String(keyValue || '').trim();
+  if (!key || !Object.prototype.hasOwnProperty.call(settings, key)) return;
 
-  return normalized;
+  settings[key] = parseSettingValue(key, rawValue, settings[key]);
 }
 
 function parseSettingValue(key, value, defaultValue) {
@@ -593,6 +645,9 @@ function normalizeDashboardSettings(settings) {
   result.showInstallHint = Boolean(result.showInstallHint);
   result.showTermLabel = Boolean(result.showTermLabel);
   result.currentTerm = normalizeStringSetting(result.currentTerm, DEFAULT_DISPLAY_SETTINGS.currentTerm, 32);
+  result.legacyTextSize = normalizeLegacyTextSize(result.legacyTextSize, DEFAULT_DISPLAY_SETTINGS.legacyTextSize);
+  result.device = normalizeDeviceId(result.device);
+  result.deviceLabel = normalizeStringSetting(result.deviceLabel, DEFAULT_DISPLAY_SETTINGS.deviceLabel, 32);
   result.appName = normalizeStringSetting(result.appName, DEFAULT_DISPLAY_SETTINGS.appName, 32);
   result.shortName = normalizeStringSetting(result.shortName, result.appName, 16);
   result.themeColor = normalizeColorSetting(result.themeColor, DEFAULT_DISPLAY_SETTINGS.themeColor);
@@ -608,6 +663,19 @@ function normalizeDashboardSettings(settings) {
 function normalizeStringSetting(value, fallback, maxLength) {
   const text = String(value || '').trim();
   return text ? text.slice(0, maxLength) : fallback;
+}
+
+function normalizeDeviceId(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+    .slice(0, 32);
+}
+
+function normalizeLegacyTextSize(value, fallback) {
+  const text = String(value || '').trim().toLowerCase();
+  return ['small', 'normal', 'large', 'xlarge'].includes(text) ? text : fallback;
 }
 
 function normalizeColorSetting(value, fallback) {

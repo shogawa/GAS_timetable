@@ -537,6 +537,8 @@
 
     <div class="footer-meta" id="footer-meta">
       <span id="footer-updated">更新 --:--</span>
+      <span id="device-separator" hidden>｜</span>
+      <span id="footer-device" hidden></span>
       <span>｜</span>
       <button class="footer-button" id="refresh-button" type="button" title="スプレッドシートとカレンダーを再取得します">再読込</button>
       <span>｜</span>
@@ -583,7 +585,12 @@
       showInstallHint: true,
       showTermLabel: true,
       currentTerm: '',
+      legacyTextSize: 'normal',
+      device: '',
+      deviceLabel: '',
     };
+
+    const DEVICE_ID = '<?= device ?>';
 
     const NIGHT_OVERRIDE_STORAGE_KEY = 'teacher-clock-night-override';
     const INSTALL_HINT_STORAGE_KEY = 'teacher-clock-install-hint-dismissed';
@@ -637,7 +644,7 @@
             google.script.run
               .withSuccessHandler(handleSuccess)
               .withFailureHandler(handleFailure)
-              .getDashboardData();
+              .getDashboardData(DEVICE_ID);
           })
           .withFailureHandler(handleFailure)
           .clearDashboardCache();
@@ -647,7 +654,7 @@
       google.script.run
         .withSuccessHandler(handleSuccess)
         .withFailureHandler(handleFailure)
-        .getDashboardData();
+        .getDashboardData(DEVICE_ID);
     }
 
     function setLoading(value) {
@@ -988,6 +995,8 @@
     function updateFooterMeta() {
       const updatedElement = document.getElementById('footer-updated');
       const refreshButton = document.getElementById('refresh-button');
+      const deviceElement = document.getElementById('footer-device');
+      const deviceSeparator = document.getElementById('device-separator');
       const nightToggle = document.getElementById('night-toggle');
       const nightReset = document.getElementById('night-reset');
       const wakeToggle = document.getElementById('wake-toggle');
@@ -1002,6 +1011,13 @@
 
       refreshButton.textContent = isLoading ? '読込中…' : '再読込';
       refreshButton.disabled = isLoading;
+
+      if (deviceElement && deviceSeparator) {
+        const deviceLabel = dashboardSettings.deviceLabel || dashboardSettings.device || '';
+        deviceElement.textContent = deviceLabel ? `端末 ${deviceLabel}` : '';
+        deviceElement.hidden = !deviceLabel;
+        deviceSeparator.hidden = !deviceLabel;
+      }
 
       const night = getEffectiveNightMode()
         ? '夜間ON'
@@ -1281,6 +1297,9 @@
         showInstallHint: normalizeBoolean(merged.showInstallHint, DEFAULT_DASHBOARD_SETTINGS.showInstallHint),
         showTermLabel: normalizeBoolean(merged.showTermLabel, DEFAULT_DASHBOARD_SETTINGS.showTermLabel),
         currentTerm: normalizeTextSetting(merged.currentTerm, DEFAULT_DASHBOARD_SETTINGS.currentTerm, 32),
+        legacyTextSize: normalizeTextSetting(merged.legacyTextSize, DEFAULT_DASHBOARD_SETTINGS.legacyTextSize, 16),
+        device: normalizeTextSetting(merged.device, DEFAULT_DASHBOARD_SETTINGS.device, 32),
+        deviceLabel: normalizeTextSetting(merged.deviceLabel, merged.device || DEFAULT_DASHBOARD_SETTINGS.deviceLabel, 32),
       };
     }
 

@@ -429,6 +429,7 @@
     <div id="footer">
       <span id="loadedLine">更新 --:--</span><br>
       <span id="loadedDetailLine" class="muted"></span><br>
+      <span id="deviceLine" class="muted"></span><br>
       <span id="installHint" class="muted"></span><br>
       <button id="reloadButton" type="button">再読込</button>
       <button id="modeButton" type="button">表示切替</button>
@@ -453,6 +454,7 @@
     var reloadTimer = null;
     var nightState = 'auto';
     var displayMode = 'normal';
+    var DEVICE_ID = '<?= device ?>';
     var defaultSettings = {
       showSeconds: true,
       refreshMinutes: 5,
@@ -465,7 +467,9 @@
       showInstallHint: true,
       burnInShiftMinutes: 5,
       burnInShiftAmount: 12,
-      legacyTextSize: 'normal'
+      legacyTextSize: 'normal',
+      device: '',
+      deviceLabel: ''
     };
 
     function el(id) {
@@ -503,6 +507,13 @@
         }
       }
       return result;
+    }
+
+    function updateDeviceLine() {
+      var settings = getSettings();
+      var deviceLabel = settings.deviceLabel || settings.device || '';
+      if (!el('deviceLine')) return;
+      el('deviceLine').innerHTML = deviceLabel ? '端末: ' + esc(deviceLabel) : '';
     }
 
     function boolValue(value, defaultValue) {
@@ -912,6 +923,7 @@
           renderStatic();
           el('loadedLine').innerHTML = '更新 ' + formatClock(lastLoadedAt);
           el('loadedDetailLine').innerHTML = '最終更新: ' + formatDateTime(lastLoadedAt);
+          updateDeviceLine();
           scheduleReload();
         })
         .withFailureHandler(function (error) {
@@ -920,9 +932,10 @@
           showError(msg);
           el('loadedLine').innerHTML = '更新失敗 ' + formatClock(new Date());
           el('loadedDetailLine').innerHTML = '最終更新失敗: ' + formatDateTime(new Date());
+          updateDeviceLine();
           scheduleReload();
         })
-        .getDashboardData();
+        .getDashboardData(DEVICE_ID);
     }
 
     function stopEvent(evt) {
