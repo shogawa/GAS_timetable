@@ -99,7 +99,8 @@ function doGet(e) {
   }
 
   const settings = getSafeDashboardSettings();
-  const template = HtmlService.createTemplateFromFile('index');
+  const useLegacy = e && e.parameter && e.parameter.legacy === '1';
+  const template = HtmlService.createTemplateFromFile(useLegacy ? 'legacy' : 'index');
   template.appName = settings.appName;
   template.themeColor = settings.themeColor;
   template.backgroundColor = settings.backgroundColor;
