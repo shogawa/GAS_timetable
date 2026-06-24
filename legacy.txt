@@ -4,7 +4,21 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="<?= appName ?>">
+  <meta name="theme-color" content="<?= themeColor ?>">
   <title><?= appName ?> Legacy</title>
+  <? if (typeof manifestUrl !== 'undefined' && manifestUrl) { ?>
+  <link rel="manifest" href="<?= manifestUrl ?>">
+  <? } ?>
+  <? if (typeof faviconHref !== 'undefined' && faviconHref) { ?>
+  <link rel="icon" href="<?= faviconHref ?>">
+  <link rel="shortcut icon" href="<?= faviconHref ?>">
+  <? } ?>
+  <? if (typeof appleTouchIconHref !== 'undefined' && appleTouchIconHref) { ?>
+  <link rel="apple-touch-icon" href="<?= appleTouchIconHref ?>">
+  <? } ?>
   <style type="text/css">
     html, body {
       margin: 0;
@@ -21,7 +35,8 @@
     }
 
     #wrap {
-      max-width: 980px;
+      position: relative;
+      max-width: 1080px;
       margin: 0 auto;
       padding: 22px;
     }
@@ -40,6 +55,12 @@
       border-radius: 14px;
       background: #111827;
       color: #d8e0ef;
+    }
+
+    #modeLine {
+      display: inline-block;
+      margin-left: 8px;
+      color: #9aa6bb;
     }
 
     #dateLine {
@@ -104,6 +125,21 @@
       line-height: 1.3;
     }
 
+    #columns {
+      overflow: hidden;
+      clear: both;
+    }
+
+    #leftCol {
+      float: left;
+      width: 49%;
+    }
+
+    #rightCol {
+      float: right;
+      width: 49%;
+    }
+
     .card {
       background: #0d1320;
       border: 1px solid #263044;
@@ -116,6 +152,13 @@
       margin: 0 0 10px;
       font-size: 25px;
       color: #d5ddec;
+    }
+
+    .hint {
+      color: #8d99ad;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-top: 4px;
     }
 
     .item {
@@ -165,6 +208,7 @@
       font-size: 16px;
       line-height: 1.8;
       padding: 8px 0 18px;
+      clear: both;
     }
 
     button {
@@ -200,34 +244,137 @@
       border-color: #1b1b1b;
     }
 
-    @media screen and (max-width: 700px) {
+    body.mode-normal .todayDetailOnly,
+    body.mode-normal .tomorrowDetailOnly {
+      display: none;
+    }
+
+    body.mode-today .normalOnly,
+    body.mode-today .tomorrowDetailOnly,
+    body.mode-today .notToday {
+      display: none;
+    }
+
+    body.mode-tomorrow .normalOnly,
+    body.mode-tomorrow .todayDetailOnly,
+    body.mode-tomorrow .notTomorrow {
+      display: none;
+    }
+
+    body.font-small #clockMain { font-size: 96px; }
+    body.font-small #clockSeconds { font-size: 34px; }
+    body.font-small #periodLine { font-size: 38px; }
+    body.font-small #subjectLine { font-size: 29px; }
+    body.font-small #remainingLine { font-size: 21px; }
+    body.font-small .item { font-size: 19px; }
+
+    body.font-large #clockMain { font-size: 132px; }
+    body.font-large #clockSeconds { font-size: 48px; }
+    body.font-large #periodLine { font-size: 54px; }
+    body.font-large #subjectLine { font-size: 39px; }
+    body.font-large #remainingLine { font-size: 27px; }
+    body.font-large .item { font-size: 25px; }
+
+    body.font-xlarge #clockMain { font-size: 148px; }
+    body.font-xlarge #clockSeconds { font-size: 54px; }
+    body.font-xlarge #periodLine { font-size: 60px; }
+    body.font-xlarge #subjectLine { font-size: 43px; }
+    body.font-xlarge #remainingLine { font-size: 30px; }
+    body.font-xlarge .item { font-size: 28px; }
+
+    @media screen and (max-width: 760px) {
       #wrap {
         padding: 14px;
       }
-      #clockMain {
+      #leftCol,
+      #rightCol {
+        float: none;
+        width: auto;
+      }
+      #clockMain,
+      body.font-large #clockMain,
+      body.font-xlarge #clockMain {
         font-size: 74px;
         letter-spacing: -4px;
       }
-      #clockSeconds {
+      body.font-small #clockMain {
+        font-size: 64px;
+      }
+      #clockSeconds,
+      body.font-large #clockSeconds,
+      body.font-xlarge #clockSeconds {
         font-size: 28px;
       }
-      #periodLine {
+      #periodLine,
+      body.font-large #periodLine,
+      body.font-xlarge #periodLine {
         font-size: 34px;
       }
-      #subjectLine {
+      body.font-small #periodLine {
+        font-size: 30px;
+      }
+      #subjectLine,
+      body.font-large #subjectLine,
+      body.font-xlarge #subjectLine {
         font-size: 26px;
       }
-      .item {
+      #remainingLine,
+      body.font-large #remainingLine,
+      body.font-xlarge #remainingLine {
+        font-size: 21px;
+      }
+      .item,
+      body.font-large .item,
+      body.font-xlarge .item {
         font-size: 19px;
+      }
+      .card h2 {
+        font-size: 22px;
+      }
+    }
+
+    @media screen and (max-width: 430px) {
+      #wrap {
+        padding: 10px;
+      }
+      #clockMain,
+      body.font-large #clockMain,
+      body.font-xlarge #clockMain {
+        font-size: 58px;
+        letter-spacing: -3px;
+      }
+      #clockSeconds,
+      body.font-large #clockSeconds,
+      body.font-xlarge #clockSeconds {
+        font-size: 22px;
+      }
+      #dateLine {
+        font-size: 21px;
+      }
+      #periodLine,
+      body.font-large #periodLine,
+      body.font-xlarge #periodLine {
+        font-size: 29px;
+      }
+      #subjectLine,
+      body.font-large #subjectLine,
+      body.font-xlarge #subjectLine {
+        font-size: 23px;
+      }
+      .item,
+      body.font-large .item,
+      body.font-xlarge .item {
+        font-size: 17px;
       }
     }
   </style>
 </head>
-<body>
+<body class="mode-normal">
   <div id="wrap">
     <div class="topbar">
       <span class="badge">Legacy表示</span>
-      <span class="muted"> 古いiPad向け簡易版</span>
+      <span id="modeLine">表示: 通常</span>
+      <div class="hint">画面をタップすると「通常 → 今日詳細 → 明日詳細」に切り替わります。</div>
     </div>
 
     <div id="dateLine">読み込み中...</div>
@@ -243,29 +390,48 @@
       <div id="remainingLine" class="muted"></div>
     </div>
 
-    <div class="card">
-      <h2>次</h2>
-      <div id="nextBox" class="muted">読み込み中...</div>
-    </div>
+    <div id="columns">
+      <div id="leftCol">
+        <div class="card normalOnly">
+          <h2>次</h2>
+          <div id="nextBox" class="muted">読み込み中...</div>
+        </div>
 
-    <div class="card">
-      <h2>今日の予定</h2>
-      <div id="eventsBox" class="muted">読み込み中...</div>
-    </div>
+        <div class="card normalOnly">
+          <h2>今日の予定</h2>
+          <div id="eventsBox" class="muted">読み込み中...</div>
+        </div>
 
-    <div class="card">
-      <h2>今日の時間割</h2>
-      <div id="todayPeriodsBox" class="muted">読み込み中...</div>
-    </div>
+        <div class="card todayDetailOnly">
+          <h2>今日の予定 詳細</h2>
+          <div id="eventsDetailBox" class="muted">読み込み中...</div>
+        </div>
 
-    <div class="card">
-      <h2>明日</h2>
-      <div id="tomorrowBox" class="muted">読み込み中...</div>
+        <div class="card tomorrowDetailOnly">
+          <h2>明日の予定</h2>
+          <div id="tomorrowEventsBox" class="muted">読み込み中...</div>
+        </div>
+      </div>
+
+      <div id="rightCol">
+        <div class="card notTomorrow">
+          <h2>今日の時間割</h2>
+          <div id="todayPeriodsBox" class="muted">読み込み中...</div>
+        </div>
+
+        <div class="card notToday">
+          <h2>明日の時間割</h2>
+          <div id="tomorrowBox" class="muted">読み込み中...</div>
+        </div>
+      </div>
     </div>
 
     <div id="footer">
       <span id="loadedLine">更新 --:--</span><br>
+      <span id="loadedDetailLine" class="muted"></span><br>
+      <span id="installHint" class="muted"></span><br>
       <button id="reloadButton" type="button">再読込</button>
+      <button id="modeButton" type="button">表示切替</button>
       <button id="nightButton" type="button">夜間: 自動</button>
     </div>
   </div>
@@ -286,14 +452,20 @@
     var lastLoadedAt = null;
     var reloadTimer = null;
     var nightState = 'auto';
+    var displayMode = 'normal';
     var defaultSettings = {
       showSeconds: true,
       refreshMinutes: 5,
       maxTodayEvents: 5,
+      maxTomorrowEvents: 3,
       maxTomorrowPeriods: 5,
       nightStart: '22:00',
       nightEnd: '06:00',
-      showTermLabel: true
+      showTermLabel: true,
+      showInstallHint: true,
+      burnInShiftMinutes: 5,
+      burnInShiftAmount: 12,
+      legacyTextSize: 'normal'
     };
 
     function el(id) {
@@ -333,6 +505,12 @@
       return result;
     }
 
+    function boolValue(value, defaultValue) {
+      if (value === true || value === 'TRUE' || value === 'true' || value === '1' || value === 1) return true;
+      if (value === false || value === 'FALSE' || value === 'false' || value === '0' || value === 0) return false;
+      return defaultValue;
+    }
+
     function formatClock(date) {
       return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
     }
@@ -341,13 +519,22 @@
       return pad2(date.getSeconds());
     }
 
+    function formatFullTime(date) {
+      return pad2(date.getHours()) + ':' + pad2(date.getMinutes()) + ':' + pad2(date.getSeconds());
+    }
+
     function formatDate(date) {
       var weekdays = ['日', '月', '火', '水', '木', '金', '土'];
       return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + weekdays[date.getDay()] + '曜日';
     }
 
+    function formatDateTime(date) {
+      return formatDate(date) + ' ' + formatFullTime(date);
+    }
+
     function formatTimeFromMs(ms) {
-      var date = new Date(ms);
+      var date = new Date(Number(ms));
+      if (!ms && ms !== 0) return '';
       return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
     }
 
@@ -375,13 +562,37 @@
       return current >= start || current < end;
     }
 
+    function fontClass(settings) {
+      var value = String(settings.legacyTextSize || settings.legacyFontSize || 'normal').toLowerCase();
+      if (value === 'small' || value === '小') return 'font-small';
+      if (value === 'large' || value === '大') return 'font-large';
+      if (value === 'xlarge' || value === 'xl' || value === '特大') return 'font-xlarge';
+      return '';
+    }
+
+    function modeLabel(mode) {
+      if (mode === 'today') return '今日詳細';
+      if (mode === 'tomorrow') return '明日詳細';
+      return '通常';
+    }
+
+    function applyBodyClass(activeNight) {
+      var settings = getSettings();
+      var cls = 'mode-' + displayMode;
+      var f = fontClass(settings);
+      if (activeNight) cls = 'night ' + cls;
+      if (f) cls += ' ' + f;
+      document.body.className = cls;
+      el('modeLine').innerHTML = '表示: ' + modeLabel(displayMode);
+    }
+
     function updateNight() {
       var settings = getSettings();
       var active = false;
       if (nightState === 'on') active = true;
       if (nightState === 'off') active = false;
       if (nightState === 'auto') active = isAutoNight(new Date(), settings);
-      document.body.className = active ? 'night' : '';
+      applyBodyClass(active);
       el('nightButton').innerHTML = '夜間: ' + (nightState === 'auto' ? '自動' : (nightState === 'on' ? 'ON' : 'OFF'));
     }
 
@@ -394,6 +605,18 @@
         nightState = 'auto';
       }
       updateNight();
+    }
+
+    function cycleMode() {
+      if (displayMode === 'normal') {
+        displayMode = 'today';
+      } else if (displayMode === 'today') {
+        displayMode = 'tomorrow';
+      } else {
+        displayMode = 'normal';
+      }
+      updateNight();
+      renderStatic();
     }
 
     function findCurrentAndNext(periods, nowMs) {
@@ -429,7 +652,7 @@
       if (today.scheduleMemo) pieces.push(today.scheduleMemo);
       if (today.isVacation) pieces.push('休業');
       if (today.isSubstituteTimetableDay) pieces.push(today.timetableDayLabel + '曜授業');
-      if (settings.showTermLabel && today.termLabel) pieces.push(today.termLabel);
+      if (boolValue(settings.showTermLabel, true) && today.termLabel) pieces.push(today.termLabel);
       if (pieces.length) {
         el('metaLine').innerHTML = esc(pieces.join(' ｜ '));
       } else {
@@ -517,58 +740,130 @@
         if (limit && count >= limit) break;
         p = periods[i];
         if (!p) continue;
-        active = nowMs >= Number(p.startMs) && nowMs < Number(p.endMs);
+        active = nowMs && nowMs >= Number(p.startMs) && nowMs < Number(p.endMs);
         html += makePeriodItem(p, active);
         count++;
       }
       el(boxId).innerHTML = html || '<span class="muted">表示する時程はありません</span>';
     }
 
-    function renderEvents() {
-      var settings = getSettings();
-      var events;
-      var max;
-      var i;
-      var ev;
+    function makeEventItem(ev) {
+      var time = '';
+      var title = '';
+      var place = '';
+      var memo = '';
+      if (!ev) return '';
+      if (ev.isAllDay) {
+        time = '終日';
+      } else if (ev.startMs) {
+        time = formatTimeFromMs(ev.startMs);
+        if (ev.endMs) time += '-' + formatTimeFromMs(ev.endMs);
+      } else {
+        time = '';
+      }
+      title = ev.title || ev.summary || '';
+      place = ev.location ? '<span class="sub">場所: ' + esc(ev.location) + '</span>' : '';
+      memo = ev.description ? '<span class="sub">' + esc(ev.description) + '</span>' : '';
+      return '<div class="item">' + esc(time) + '　' + esc(title) + place + memo + '</div>';
+    }
+
+    function renderEventsToBox(boxId, events, limit, emptyText) {
       var html = '';
-      var time;
-      if (!dashboardData || !dashboardData.today) return;
-      events = dashboardData.today.events || [];
-      max = Number(settings.maxTodayEvents || 5);
-      if (!events.length || max <= 0) {
-        el('eventsBox').innerHTML = '<span class="muted">今日の予定はありません</span>';
+      var i;
+      var max = Number(limit || 0);
+      if (!events || !events.length || max <= 0) {
+        el(boxId).innerHTML = '<span class="muted">' + esc(emptyText) + '</span>';
         return;
       }
       for (i = 0; i < events.length && i < max; i++) {
-        ev = events[i];
-        time = ev.isAllDay ? '終日' : formatTimeFromMs(ev.startMs);
-        html += '<div class="item">' + esc(time) + '　' + esc(ev.title || '') + '</div>';
+        html += makeEventItem(events[i]);
       }
-      el('eventsBox').innerHTML = html;
+      el(boxId).innerHTML = html || '<span class="muted">' + esc(emptyText) + '</span>';
+    }
+
+    function renderEvents() {
+      var settings = getSettings();
+      var events;
+      var tomorrowEvents;
+      var maxToday;
+      var maxTomorrow;
+      if (!dashboardData || !dashboardData.today) return;
+      events = dashboardData.today.events || [];
+      tomorrowEvents = dashboardData.tomorrow && dashboardData.tomorrow.events ? dashboardData.tomorrow.events : [];
+      maxToday = Number(settings.maxTodayEvents || 5);
+      maxTomorrow = Number(settings.maxTomorrowEvents || 3);
+      renderEventsToBox('eventsBox', events, maxToday, '今日の予定はありません');
+      renderEventsToBox('eventsDetailBox', events, events.length || maxToday, '今日の予定はありません');
+      renderEventsToBox('tomorrowEventsBox', tomorrowEvents, maxTomorrow, '明日の予定はありません');
+    }
+
+    function renderInstallHint() {
+      var settings = getSettings();
+      var show = boolValue(settings.showInstallHint, true);
+      var ua = window.navigator && window.navigator.userAgent ? window.navigator.userAgent : '';
+      var isIOS = ua.indexOf('iPad') >= 0 || ua.indexOf('iPhone') >= 0 || ua.indexOf('iPod') >= 0;
+      if (!show) {
+        el('installHint').innerHTML = '';
+        return;
+      }
+      if (isIOS) {
+        el('installHint').innerHTML = 'ホーム画面に追加: Safariの共有ボタン → ホーム画面に追加';
+      } else {
+        el('installHint').innerHTML = 'ホーム画面に追加: ブラウザのメニューから追加';
+      }
+    }
+
+    function updateBurnInShift() {
+      var settings = getSettings();
+      var minutes = Number(settings.burnInShiftMinutes || 0);
+      var amount = Number(settings.burnInShiftAmount || 0);
+      var bucket;
+      var x = 0;
+      var y = 0;
+      if (!minutes || minutes < 1 || !amount || amount < 1) {
+        el('wrap').style.left = '0px';
+        el('wrap').style.top = '0px';
+        return;
+      }
+      bucket = Math.floor((new Date()).getTime() / (minutes * 60000)) % 9;
+      if (bucket === 1) { x = amount; y = 0; }
+      if (bucket === 2) { x = amount; y = amount; }
+      if (bucket === 3) { x = 0; y = amount; }
+      if (bucket === 4) { x = -amount; y = amount; }
+      if (bucket === 5) { x = -amount; y = 0; }
+      if (bucket === 6) { x = -amount; y = -amount; }
+      if (bucket === 7) { x = 0; y = -amount; }
+      if (bucket === 8) { x = amount; y = -amount; }
+      el('wrap').style.left = x + 'px';
+      el('wrap').style.top = y + 'px';
     }
 
     function renderStatic() {
       var settings = getSettings();
       var nowMs = (new Date()).getTime();
+      var tomorrowLimit;
       if (!dashboardData || !dashboardData.today) return;
       el('dateLine').innerHTML = esc(dashboardData.today.dateLabel || formatDate(new Date()));
       renderMeta();
       renderEvents();
       renderPeriods('todayPeriodsBox', dashboardData.today.periodsToday || [], 0, nowMs);
       if (dashboardData.tomorrow) {
-        renderPeriods('tomorrowBox', dashboardData.tomorrow.periodsToday || [], Number(settings.maxTomorrowPeriods || 5), 0);
+        tomorrowLimit = displayMode === 'tomorrow' ? 0 : Number(settings.maxTomorrowPeriods || 5);
+        renderPeriods('tomorrowBox', dashboardData.tomorrow.periodsToday || [], tomorrowLimit, 0);
       } else {
         el('tomorrowBox').innerHTML = '<span class="muted">明日のデータがありません</span>';
       }
+      renderInstallHint();
       renderMain();
       updateNight();
+      updateBurnInShift();
     }
 
     function updateClock() {
       var now = new Date();
       var settings = getSettings();
       el('clockMain').innerHTML = formatClock(now);
-      if (settings.showSeconds) {
+      if (boolValue(settings.showSeconds, true)) {
         el('clockSeconds').style.display = '';
         el('clockSeconds').innerHTML = formatSeconds(now);
       } else {
@@ -579,6 +874,7 @@
       }
       renderMain();
       updateNight();
+      updateBurnInShift();
     }
 
     function showError(message) {
@@ -601,6 +897,7 @@
     function refreshData(manual) {
       el('mainPanel').className = 'panel';
       el('loadedLine').innerHTML = manual ? '再読込中...' : '更新中...';
+      el('loadedDetailLine').innerHTML = '';
 
       if (typeof google === 'undefined' || !google.script || !google.script.run) {
         showError('google.script.run が使えません。Apps Script のWebアプリとして開いてください。');
@@ -614,6 +911,7 @@
           lastLoadedAt = new Date();
           renderStatic();
           el('loadedLine').innerHTML = '更新 ' + formatClock(lastLoadedAt);
+          el('loadedDetailLine').innerHTML = '最終更新: ' + formatDateTime(lastLoadedAt);
           scheduleReload();
         })
         .withFailureHandler(function (error) {
@@ -621,14 +919,35 @@
           if (error && error.message) msg = error.message;
           showError(msg);
           el('loadedLine').innerHTML = '更新失敗 ' + formatClock(new Date());
+          el('loadedDetailLine').innerHTML = '最終更新失敗: ' + formatDateTime(new Date());
           scheduleReload();
         })
         .getDashboardData();
     }
 
+    function stopEvent(evt) {
+      evt = evt || window.event;
+      if (evt && evt.stopPropagation) evt.stopPropagation();
+      if (evt) evt.cancelBubble = true;
+    }
+
+    function targetIsButton(evt) {
+      var target = evt && (evt.target || evt.srcElement);
+      var tag;
+      if (!target) return false;
+      tag = String(target.tagName || '').toUpperCase();
+      return tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    }
+
     function init() {
-      el('reloadButton').onclick = function () { refreshData(true); };
-      el('nightButton').onclick = cycleNight;
+      el('reloadButton').onclick = function (evt) { stopEvent(evt); refreshData(true); };
+      el('nightButton').onclick = function (evt) { stopEvent(evt); cycleNight(); };
+      el('modeButton').onclick = function (evt) { stopEvent(evt); cycleMode(); };
+      el('wrap').onclick = function (evt) {
+        if (targetIsButton(evt || window.event)) return;
+        cycleMode();
+      };
+      updateNight();
       updateClock();
       window.setInterval(updateClock, 1000);
       refreshData(false);
