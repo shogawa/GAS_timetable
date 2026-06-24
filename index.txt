@@ -1,0 +1,1509 @@
+<!doctype html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><?= appName ?></title>
+  <link rel="manifest" href="<?= manifestUrl ?>">
+  <link rel="icon" id="favicon-link" href="<?= faviconHref ?>">
+  <meta name="theme-color" id="theme-color-meta" content="<?= themeColor ?>">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="<?= appName ?>">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" id="apple-touch-icon-link" href="<?= appleTouchIconHref ?>">
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #05070a;
+      color: #f5f7fb;
+      --burn-x: 0px;
+      --burn-y: 0px;
+      --night-opacity: 0.58;
+      --night-brightness: 0.72;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #182033 0, #05070a 55%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .screen {
+      width: min(100vw, 1180px);
+      padding: 32px;
+      box-sizing: border-box;
+      transform: translate(var(--burn-x), var(--burn-y));
+      transition: transform 1.5s ease, opacity 0.8s ease, filter 0.8s ease;
+    }
+
+    .mode-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.35em 0.75em;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: clamp(14px, 2vw, 18px);
+      opacity: 0.7;
+    }
+
+    .date {
+      font-size: clamp(20px, 3vw, 34px);
+      opacity: 0.75;
+      margin-bottom: 8px;
+    }
+
+    .clock {
+      display: flex;
+      align-items: baseline;
+      gap: 0.08em;
+      font-size: clamp(72px, 18vw, 180px);
+      font-weight: 800;
+      line-height: 0.95;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clock-main {
+      letter-spacing: -0.08em;
+    }
+
+    .clock-seconds {
+      font-size: 0.34em;
+      opacity: 0.72;
+      letter-spacing: -0.03em;
+    }
+
+    .state {
+      margin-top: 24px;
+      padding: 24px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+    }
+
+    .period {
+      font-size: clamp(34px, 7vw, 72px);
+      font-weight: 750;
+      line-height: 1.15;
+    }
+
+    .subject {
+      font-size: clamp(24px, 4vw, 48px);
+      opacity: 0.9;
+      margin-top: 8px;
+    }
+
+    .remaining {
+      font-size: clamp(20px, 3vw, 34px);
+      opacity: 0.75;
+      margin-top: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .card h2 {
+      font-size: clamp(20px, 3vw, 28px);
+      margin: 0 0 12px;
+      opacity: 0.8;
+    }
+
+    .item {
+      font-size: clamp(18px, 2.6vw, 28px);
+      padding: 8px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .room {
+      opacity: 0.75;
+      font-size: 0.82em;
+      margin-left: 0.3em;
+    }
+
+    .status {
+      opacity: 0.85;
+      font-size: 0.72em;
+      margin-left: 0.35em;
+      padding: 0.08em 0.35em;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .memo {
+      margin-top: 8px;
+      font-size: 0.72em;
+      opacity: 0.7;
+    }
+
+    .muted {
+      opacity: 0.55;
+    }
+
+    .detail {
+      display: none;
+      margin-top: 22px;
+      padding: 22px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .detail-title {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 750;
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+
+    .detail-subtitle {
+      font-size: clamp(18px, 2.8vw, 28px);
+      opacity: 0.75;
+      margin-bottom: 16px;
+    }
+
+    .detail-section-title {
+      font-size: clamp(19px, 2.8vw, 28px);
+      font-weight: 700;
+      opacity: 0.82;
+      margin-top: 22px;
+      margin-bottom: 8px;
+    }
+
+    .detail-item {
+      display: grid;
+      grid-template-columns: minmax(8em, 0.8fr) 1.4fr;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: clamp(17px, 2.5vw, 27px);
+    }
+
+    .detail-item.active {
+      padding-left: 14px;
+      padding-right: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.10);
+    }
+
+    .detail-time {
+      opacity: 0.75;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .detail-main {
+      min-width: 0;
+    }
+
+    body[data-mode="today"] .state,
+    body[data-mode="today"] .grid,
+    body[data-mode="tomorrow"] .state,
+    body[data-mode="tomorrow"] .grid {
+      display: none;
+    }
+
+    body[data-mode="today"] .detail,
+    body[data-mode="tomorrow"] .detail {
+      display: block;
+    }
+
+    .install-hint {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.075);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: clamp(13px, 2vw, 17px);
+      opacity: 0.78;
+    }
+
+    .install-hint[hidden] {
+      display: none;
+    }
+
+    .install-hint-text {
+      line-height: 1.45;
+    }
+
+    .install-hint-title {
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .install-hint-close {
+      all: unset;
+      cursor: pointer;
+      flex: 0 0 auto;
+      padding: 0.35em 0.75em;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      touch-action: manipulation;
+    }
+
+    .footer-meta {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.35em;
+      text-align: right;
+      font-size: clamp(12px, 1.8vw, 16px);
+      opacity: 0.48;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .footer-button {
+      all: unset;
+      cursor: pointer;
+      padding: 0.18em 0.55em;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.10);
+      opacity: 0.95;
+      touch-action: manipulation;
+    }
+
+    .footer-button:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .footer-button:disabled {
+      cursor: default;
+      opacity: 0.45;
+      transform: none;
+    }
+
+    .footer-button.footer-reset {
+      opacity: 0.7;
+    }
+
+    body[data-night="true"] {
+      background: #000;
+      color: rgba(245, 247, 251, 0.72);
+    }
+
+    body[data-night="true"] .screen {
+      opacity: var(--night-opacity);
+      filter: brightness(var(--night-brightness));
+    }
+
+    body[data-show-seconds="false"] .clock-seconds,
+    body[data-night="true"] .clock-seconds {
+      display: none;
+    }
+
+    body[data-night="true"] .mode-label,
+    body[data-night="true"] .state,
+    body[data-night="true"] .card,
+    body[data-night="true"] .detail,
+    body[data-night="true"] .install-hint {
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    body[data-night="true"] .grid {
+      opacity: 0.82;
+    }
+
+    body[data-night="true"] .footer-button {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+
+    @media (display-mode: standalone) {
+      .install-hint {
+        display: none !important;
+      }
+    }
+
+    @media (min-width: 1000px) and (min-height: 760px) {
+      .screen {
+        width: min(100vw, 1280px);
+        padding: clamp(30px, 3vw, 48px);
+      }
+
+      .grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card {
+        min-width: 0;
+      }
+
+      .item {
+        font-size: clamp(16px, 1.45vw, 24px);
+      }
+
+      .detail {
+        max-height: none;
+      }
+    }
+
+    @media (orientation: landscape) and (min-width: 701px) and (max-height: 760px) {
+      body {
+        align-items: stretch;
+      }
+
+      .screen {
+        width: min(100vw, 1500px);
+        min-height: 100vh;
+        padding: clamp(14px, 2.2vw, 30px);
+        display: grid;
+        grid-template-columns: minmax(340px, 0.9fr) minmax(360px, 1fr);
+        grid-template-rows: auto auto auto 1fr auto;
+        column-gap: clamp(16px, 2.5vw, 30px);
+        align-content: center;
+      }
+
+      .mode-label {
+        grid-column: 1 / -1;
+        margin-bottom: 4px;
+        font-size: clamp(13px, 1.6vw, 17px);
+      }
+
+      .date {
+        grid-column: 1;
+        font-size: clamp(16px, 2vw, 28px);
+        margin-bottom: 4px;
+      }
+
+      .clock {
+        grid-column: 1;
+        font-size: clamp(70px, 12vw, 150px);
+      }
+
+      .state {
+        grid-column: 1;
+        margin-top: 16px;
+        padding: clamp(16px, 2.2vw, 22px);
+        border-radius: 24px;
+      }
+
+      .period {
+        font-size: clamp(30px, 5vw, 64px);
+      }
+
+      .subject {
+        font-size: clamp(21px, 3.1vw, 42px);
+      }
+
+      .remaining {
+        font-size: clamp(18px, 2.2vw, 30px);
+      }
+
+      .grid {
+        grid-column: 2;
+        grid-row: 2 / span 3;
+        grid-template-columns: 1fr;
+        align-self: start;
+        margin-top: 0;
+        max-height: calc(100vh - 96px);
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      .card {
+        padding: clamp(14px, 1.8vw, 18px);
+        border-radius: 22px;
+      }
+
+      .card h2 {
+        font-size: clamp(17px, 2vw, 24px);
+        margin-bottom: 8px;
+      }
+
+      .item {
+        font-size: clamp(14px, 1.8vw, 22px);
+        padding: 6px 0;
+      }
+
+      .detail {
+        grid-column: 1 / -1;
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+      }
+
+      .detail-title {
+        font-size: clamp(26px, 4vw, 48px);
+      }
+
+      .detail-subtitle {
+        font-size: clamp(16px, 2.2vw, 24px);
+      }
+
+      .detail-item {
+        grid-template-columns: minmax(8em, 0.75fr) 1.5fr;
+        font-size: clamp(15px, 1.9vw, 23px);
+        padding: 10px 0;
+      }
+
+      .footer-meta {
+        grid-column: 1 / -1;
+        margin-top: 8px;
+      }
+
+      body[data-mode="today"] .screen,
+      body[data-mode="tomorrow"] .screen {
+        display: block;
+        width: min(100vw, 1180px);
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .screen {
+        padding: 22px;
+        width: 100vw;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .footer-meta {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+
+<body data-mode="normal">
+  <main class="screen" id="screen">
+    <div class="mode-label" id="mode-label">通常表示　タップで切替</div>
+    <div class="date" id="date">読み込み中…</div>
+    <div class="clock" id="clock">
+      <span class="clock-main" id="clock-main">--:--</span>
+      <span class="clock-seconds" id="clock-seconds">--</span>
+    </div>
+
+    <section class="state">
+      <div class="period" id="period">読み込み中</div>
+      <div class="subject" id="subject"></div>
+      <div class="remaining" id="remaining"></div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>次</h2>
+        <div id="next"></div>
+      </div>
+
+      <div class="card">
+        <h2>今日の予定</h2>
+        <div id="events"></div>
+      </div>
+
+      <div class="card">
+        <h2>明日</h2>
+        <div id="tomorrow"></div>
+      </div>
+    </section>
+
+    <section class="detail" id="detail"></section>
+
+    <div class="install-hint" id="install-hint" hidden>
+      <div class="install-hint-text">
+        <div class="install-hint-title">ホーム画面に追加できます</div>
+        <div id="install-hint-body">ブラウザのメニューから「ホーム画面に追加」を選ぶと、アプリ風に開けます。</div>
+      </div>
+      <button class="install-hint-close" id="install-hint-close" type="button">閉じる</button>
+    </div>
+
+    <div class="footer-meta" id="footer-meta">
+      <span id="footer-updated">更新 --:--</span>
+      <span>｜</span>
+      <button class="footer-button" id="refresh-button" type="button" title="スプレッドシートとカレンダーを再取得します">再読込</button>
+      <span>｜</span>
+      <button class="footer-button" id="night-toggle" type="button" title="夜間モードをON/OFFします">夜間OFF</button>
+      <button class="footer-button footer-reset" id="night-reset" type="button" title="時刻による自動切替に戻します" hidden>自動へ</button>
+      <span id="wake-separator">｜</span>
+      <button class="footer-button" id="wake-toggle" type="button" title="対応ブラウザで画面スリープを防止します">画面ON</button>
+      <span id="fullscreen-separator">｜</span>
+      <button class="footer-button" id="fullscreen-toggle" type="button" title="対応ブラウザで全画面表示に切り替えます">全画面</button>
+    </div>
+  </main>
+
+  <script>
+    let dashboard = null;
+    let tomorrowDashboard = null;
+    let lastUpdatedMs = null;
+    let isLoading = false;
+    let autoRefreshTimerId = null;
+    let hasAppliedDefaultMode = false;
+
+    const DEFAULT_DASHBOARD_SETTINGS = {
+      nightStart: '22:00',
+      nightEnd: '06:00',
+      showSeconds: true,
+      refreshMinutes: 5,
+      burnInShiftMinutes: 5,
+      burnInShiftAmount: 12,
+      maxTodayEvents: 5,
+      maxTomorrowEvents: 3,
+      maxTomorrowPeriods: 5,
+      defaultMode: 'normal',
+      nightOpacity: 0.58,
+      nightBrightness: 0.72,
+      appName: '置き時計',
+      shortName: '置き時計',
+      themeColor: '#05070a',
+      backgroundColor: '#05070a',
+      faviconUrl: '',
+      appleTouchIconUrl: '',
+      icon192Url: '',
+      icon512Url: '',
+      enableWakeLock: true,
+      enableFullscreen: true,
+      showInstallHint: true,
+      showTermLabel: true,
+      currentTerm: '',
+    };
+
+    const NIGHT_OVERRIDE_STORAGE_KEY = 'teacher-clock-night-override';
+    const INSTALL_HINT_STORAGE_KEY = 'teacher-clock-install-hint-dismissed';
+    const BURN_IN_SHIFT_RATIOS = [
+      [0, 0],
+      [0.67, -0.50],
+      [-0.58, 0.42],
+      [1.00, 0.33],
+      [-0.83, -0.67],
+      [0.42, 0.83],
+      [-0.33, -0.25],
+    ];
+
+    const modes = ['normal', 'today', 'tomorrow'];
+    let modeIndex = 0;
+    let nightOverride = loadNightOverride();
+    let dashboardSettings = { ...DEFAULT_DASHBOARD_SETTINGS };
+    let wakeLock = null;
+    let wakeLockRequested = false;
+    let wakeLockErrorMessage = '';
+    let fullscreenErrorMessage = '';
+
+    function loadData(options = {}) {
+      const force = options.force === true;
+
+      if (isLoading) return;
+      setLoading(true);
+
+      const handleSuccess = data => {
+        // 新形式: { today, tomorrow, settings }。古い形式が返ってきても落ちないようにしておく。
+        dashboard = data.today || data;
+        tomorrowDashboard = data.tomorrow || null;
+        dashboardSettings = normalizeClientSettings(data.settings || {});
+        applySettings();
+        applyDefaultModeFromSettings();
+        lastUpdatedMs = Date.now();
+        setLoading(false);
+        render();
+      };
+
+      const handleFailure = error => {
+        setLoading(false);
+        document.getElementById('period').textContent = '取得エラー';
+        document.getElementById('subject').textContent = error.message || String(error);
+        updateFooterMeta();
+      };
+
+      if (force) {
+        google.script.run
+          .withSuccessHandler(() => {
+            google.script.run
+              .withSuccessHandler(handleSuccess)
+              .withFailureHandler(handleFailure)
+              .getDashboardData();
+          })
+          .withFailureHandler(handleFailure)
+          .clearDashboardCache();
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(handleSuccess)
+        .withFailureHandler(handleFailure)
+        .getDashboardData();
+    }
+
+    function setLoading(value) {
+      isLoading = value;
+      updateFooterMeta();
+    }
+
+    function render() {
+      renderClock();
+      updateNightMode();
+      updateModeLabel();
+      updateFooterMeta();
+
+      if (!dashboard) return;
+
+      const currentMode = getCurrentMode();
+      const headerData = currentMode === 'tomorrow'
+        ? tomorrowDashboard || dashboard
+        : dashboard;
+
+      document.getElementById('date').textContent =
+        `${headerData.dateLabel}${makeScheduleText(headerData)}`;
+
+      renderNormalView();
+      renderDetailView();
+    }
+
+    function renderNormalView() {
+      const now = Date.now();
+      const periods = dashboard.periodsToday || [];
+      const current = periods.find(p => now >= p.startMs && now < p.endMs);
+      const next = periods.find(p => now < p.startMs);
+
+      if (dashboard.isVacation) {
+        document.getElementById('period').textContent = '休業期間';
+        document.getElementById('subject').innerHTML = renderVacationInfo(dashboard);
+        document.getElementById('remaining').textContent = '授業はありません';
+      } else if (current) {
+        document.getElementById('period').textContent = current.label;
+        document.getElementById('subject').innerHTML = renderPeriodInfo(current);
+        document.getElementById('remaining').textContent =
+          `終了まで あと ${Math.ceil((current.endMs - now) / 60000)}分`;
+      } else {
+        document.getElementById('period').textContent = '授業時間外';
+        document.getElementById('subject').textContent = '';
+        document.getElementById('remaining').textContent = next
+          ? `${formatTime(next.startMs)} から ${next.label}`
+          : '今日の時程は終了';
+      }
+
+      if (dashboard.isVacation) {
+        document.getElementById('next').innerHTML =
+          `<div class="item muted">${renderVacationInfo(dashboard)}<br>次の時限はありません</div>`;
+      } else if (next) {
+        document.getElementById('next').innerHTML = `
+          <div class="item">
+            ${formatTime(next.startMs)}〜${formatTime(next.endMs)}<br>
+            <strong>${escapeHtml(next.label)}</strong><br>
+            <span class="muted">${renderPeriodInfo(next)}</span>
+          </div>
+        `;
+      } else {
+        document.getElementById('next').innerHTML =
+          `<div class="item muted">次の時限はありません</div>`;
+      }
+
+      renderEvents();
+      renderTomorrow();
+    }
+
+    function renderDetailView() {
+      const currentMode = getCurrentMode();
+      const detail = document.getElementById('detail');
+
+      if (currentMode === 'normal') {
+        detail.innerHTML = '';
+        return;
+      }
+
+      const dayData = currentMode === 'tomorrow'
+        ? tomorrowDashboard
+        : dashboard;
+
+      const title = currentMode === 'tomorrow'
+        ? '明日詳細'
+        : '今日詳細';
+
+      detail.innerHTML = renderDayDetail(title, dayData, currentMode);
+    }
+
+    function renderDayDetail(title, dayData, targetMode) {
+      if (!dayData) {
+        return `<div class="detail-title">${escapeHtml(title)}</div><div class="item muted">情報がまだありません</div>`;
+      }
+
+      const now = Date.now();
+      const periods = dayData.periodsToday || [];
+      const events = dayData.events || [];
+
+      const periodHtml = periods.length
+        ? periods.map(p => {
+            const isCurrent = targetMode === 'today' && now >= p.startMs && now < p.endMs;
+            const isNext = targetMode === 'today' && !isCurrent && now < p.startMs && !periods.some(x => now < x.startMs && x.startMs < p.startMs);
+            const marker = isCurrent
+              ? '<span class="status">現在</span>'
+              : isNext
+                ? '<span class="status">次</span>'
+                : '';
+
+            return `
+              <div class="detail-item ${isCurrent ? 'active' : ''}">
+                <div class="detail-time">
+                  ${escapeHtml(p.label)}<br>
+                  ${formatTime(p.startMs)}〜${formatTime(p.endMs)}
+                </div>
+                <div class="detail-main">
+                  ${marker}${renderPeriodInfo(p)}
+                </div>
+              </div>
+            `;
+          }).join('')
+        : `<div class="item muted">${dayData.isVacation ? renderVacationInfo(dayData) : '授業はありません'}</div>`;
+
+      const eventHtml = events.length
+        ? events.map(e => {
+            const time = e.isAllDay
+              ? '終日'
+              : `${formatTime(e.startMs)}〜${formatTime(e.endMs)}`;
+
+            return `
+              <div class="detail-item">
+                <div class="detail-time">${time}</div>
+                <div class="detail-main"><strong>${escapeHtml(e.title)}</strong></div>
+              </div>
+            `;
+          }).join('')
+        : `<div class="item muted">予定はありません</div>`;
+
+      return `
+        <div class="detail-title">${escapeHtml(title)}</div>
+        <div class="detail-subtitle">${escapeHtml(dayData.dateLabel)}${escapeHtml(makeScheduleText(dayData))}</div>
+
+        <div class="detail-section-title">時間割</div>
+        ${periodHtml}
+
+        <div class="detail-section-title">Google Calendar</div>
+        ${eventHtml}
+      `;
+    }
+
+    function renderClock() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock-main').textContent = `${hh}:${mm}`;
+      document.getElementById('clock-seconds').textContent = ss;
+    }
+
+    function renderEvents() {
+      const now = Date.now();
+      const events = (dashboard.events || [])
+        .filter(e => e.endMs >= now || e.isAllDay)
+        .slice(0, dashboardSettings.maxTodayEvents);
+
+      const html = events.length
+        ? events.map(e => {
+            const time = e.isAllDay
+              ? '終日'
+              : `${formatTime(e.startMs)}〜${formatTime(e.endMs)}`;
+
+            return `
+              <div class="item">
+                ${time}<br>
+                <strong>${escapeHtml(e.title)}</strong>
+              </div>
+            `;
+          }).join('')
+        : `<div class="item muted">この後の予定はありません</div>`;
+
+      document.getElementById('events').innerHTML = html;
+    }
+
+    function renderTomorrow() {
+      const element = document.getElementById('tomorrow');
+      if (!element) return;
+
+      if (!tomorrowDashboard) {
+        element.innerHTML = `<div class="item muted">明日の情報はまだありません</div>`;
+        return;
+      }
+
+      const parts = [];
+      parts.push(`
+        <div class="item">
+          <strong>${escapeHtml(tomorrowDashboard.dateLabel)}${escapeHtml(makeScheduleText(tomorrowDashboard))}</strong>
+        </div>
+      `);
+
+      const periods = tomorrowDashboard.periodsToday || [];
+
+      if (periods.length) {
+        parts.push(periods.slice(0, dashboardSettings.maxTomorrowPeriods).map(p => `
+          <div class="item">
+            ${escapeHtml(p.label)}　${formatTime(p.startMs)}〜${formatTime(p.endMs)}<br>
+            <span class="muted">${renderPeriodInfo(p)}</span>
+          </div>
+        `).join(''));
+      } else {
+        parts.push(`<div class="item muted">${tomorrowDashboard.isVacation ? renderVacationInfo(tomorrowDashboard) : '授業はありません'}</div>`);
+      }
+
+      const events = (tomorrowDashboard.events || []).slice(0, dashboardSettings.maxTomorrowEvents);
+
+      if (events.length) {
+        parts.push(events.map(e => {
+          const time = e.isAllDay
+            ? '終日'
+            : `${formatTime(e.startMs)}〜${formatTime(e.endMs)}`;
+
+          return `
+            <div class="item">
+              ${time}<br>
+              <strong>${escapeHtml(e.title)}</strong>
+            </div>
+          `;
+        }).join(''));
+      }
+
+      element.innerHTML = parts.join('');
+    }
+
+    function makeScheduleText(dayData) {
+      if (!dayData) return '';
+
+      const scheduleParts = [];
+
+      if (
+        dashboardSettings.showTermLabel &&
+        dayData.termLabel &&
+        dayData.termLabel !== '通年'
+      ) {
+        scheduleParts.push(dayData.termLabel);
+      }
+
+      if (dayData.scheduleType && dayData.scheduleType !== '通常') {
+        scheduleParts.push(dayData.scheduleType);
+      }
+
+      if (dayData.isSubstituteTimetableDay) {
+        scheduleParts.push(`${dayData.timetableDayLabel}曜授業`);
+      }
+
+      if (dayData.scheduleMemo) {
+        scheduleParts.push(dayData.scheduleMemo);
+      }
+
+      return scheduleParts.length
+        ? `｜${scheduleParts.join('・')}`
+        : '';
+    }
+
+    function getCurrentMode() {
+      return modes[modeIndex];
+    }
+
+    function cycleMode() {
+      modeIndex = (modeIndex + 1) % modes.length;
+      document.body.dataset.mode = getCurrentMode();
+      render();
+    }
+
+    function updateModeLabel() {
+      const labels = {
+        normal: '通常表示',
+        today: '今日詳細',
+        tomorrow: '明日詳細',
+      };
+
+      document.getElementById('mode-label').textContent =
+        `${labels[getCurrentMode()]}　タップで切替`;
+    }
+
+    function updateNightMode() {
+      document.body.dataset.night = getEffectiveNightMode() ? 'true' : 'false';
+    }
+
+    function isNightTime() {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const startMinutes = parseClockMinutes(dashboardSettings.nightStart, 22 * 60);
+      const endMinutes = parseClockMinutes(dashboardSettings.nightEnd, 6 * 60);
+
+      if (startMinutes === endMinutes) return false;
+
+      if (startMinutes < endMinutes) {
+        return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+      }
+
+      return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+    }
+
+    function getEffectiveNightMode() {
+      if (nightOverride === 'on') return true;
+      if (nightOverride === 'off') return false;
+      return isNightTime();
+    }
+
+    function loadNightOverride() {
+      try {
+        const value = localStorage.getItem(NIGHT_OVERRIDE_STORAGE_KEY);
+        return ['auto', 'on', 'off'].includes(value) ? value : 'auto';
+      } catch (error) {
+        return 'auto';
+      }
+    }
+
+    function saveNightOverride(value) {
+      nightOverride = value;
+
+      try {
+        localStorage.setItem(NIGHT_OVERRIDE_STORAGE_KEY, value);
+      } catch (error) {
+        // 古い端末でlocalStorageが使えない場合は、その場限りの切替にする。
+      }
+    }
+
+    function toggleNightOverride() {
+      saveNightOverride(getEffectiveNightMode() ? 'off' : 'on');
+      render();
+    }
+
+    function resetNightOverride() {
+      saveNightOverride('auto');
+      render();
+    }
+
+    function updateFooterMeta() {
+      const updatedElement = document.getElementById('footer-updated');
+      const refreshButton = document.getElementById('refresh-button');
+      const nightToggle = document.getElementById('night-toggle');
+      const nightReset = document.getElementById('night-reset');
+      const wakeToggle = document.getElementById('wake-toggle');
+      const wakeSeparator = document.getElementById('wake-separator');
+      const fullscreenToggle = document.getElementById('fullscreen-toggle');
+      const fullscreenSeparator = document.getElementById('fullscreen-separator');
+      if (!updatedElement || !refreshButton || !nightToggle || !nightReset) return;
+
+      updatedElement.textContent = lastUpdatedMs
+        ? `更新 ${formatTime(lastUpdatedMs)}`
+        : '更新 --:--';
+
+      refreshButton.textContent = isLoading ? '読込中…' : '再読込';
+      refreshButton.disabled = isLoading;
+
+      const night = getEffectiveNightMode()
+        ? '夜間ON'
+        : '夜間OFF';
+
+      nightToggle.textContent = nightOverride === 'auto'
+        ? night
+        : `${night}固定`;
+
+      nightReset.hidden = nightOverride === 'auto';
+
+      if (wakeToggle && wakeSeparator) {
+        const enabled = Boolean(dashboardSettings.enableWakeLock);
+        wakeToggle.hidden = !enabled;
+        wakeSeparator.hidden = !enabled;
+
+        if (enabled) {
+          const supported = 'wakeLock' in navigator;
+          wakeToggle.disabled = !supported;
+
+          if (!supported) {
+            wakeToggle.textContent = '画面ON不可';
+          } else if (wakeLock) {
+            wakeToggle.textContent = '画面ON中';
+          } else if (wakeLockErrorMessage) {
+            wakeToggle.textContent = '画面ON失敗';
+          } else {
+            wakeToggle.textContent = '画面ON';
+          }
+        }
+      }
+
+      if (fullscreenToggle && fullscreenSeparator) {
+        const enabled = Boolean(dashboardSettings.enableFullscreen);
+        fullscreenToggle.hidden = !enabled;
+        fullscreenSeparator.hidden = !enabled;
+
+        if (enabled) {
+          const supported = isFullscreenSupported();
+          const active = isFullscreenActive();
+          fullscreenToggle.disabled = !supported;
+
+          if (!supported) {
+            fullscreenToggle.textContent = '全画面不可';
+          } else if (active) {
+            fullscreenToggle.textContent = '全画面解除';
+          } else if (fullscreenErrorMessage) {
+            fullscreenToggle.textContent = '全画面失敗';
+          } else {
+            fullscreenToggle.textContent = '全画面';
+          }
+        }
+      }
+    }
+
+    function updateBurnInShift() {
+      const minutes = Math.max(1, Number(dashboardSettings.burnInShiftMinutes) || DEFAULT_DASHBOARD_SETTINGS.burnInShiftMinutes);
+      const amount = Math.max(0, Number(dashboardSettings.burnInShiftAmount) || DEFAULT_DASHBOARD_SETTINGS.burnInShiftAmount);
+      const index = Math.floor(Date.now() / (minutes * 60 * 1000)) % BURN_IN_SHIFT_RATIOS.length;
+      const [rx, ry] = BURN_IN_SHIFT_RATIOS[index];
+      const x = Math.round(rx * amount);
+      const y = Math.round(ry * amount);
+
+      document.documentElement.style.setProperty('--burn-x', `${x}px`);
+      document.documentElement.style.setProperty('--burn-y', `${y}px`);
+    }
+
+    async function toggleWakeLock() {
+      wakeLockErrorMessage = '';
+
+      if (!('wakeLock' in navigator)) {
+        wakeLockRequested = false;
+        wakeLockErrorMessage = '非対応';
+        updateFooterMeta();
+        return;
+      }
+
+      if (wakeLock) {
+        wakeLockRequested = false;
+        await releaseWakeLock();
+        updateFooterMeta();
+        return;
+      }
+
+      wakeLockRequested = true;
+      await requestWakeLock();
+      updateFooterMeta();
+    }
+
+    async function requestWakeLock() {
+      if (!wakeLockRequested || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLockErrorMessage = '';
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          updateFooterMeta();
+        });
+      } catch (error) {
+        wakeLock = null;
+        wakeLockRequested = false;
+        wakeLockErrorMessage = error?.message || '失敗';
+      }
+    }
+
+    async function releaseWakeLock() {
+      if (!wakeLock) return;
+
+      const lock = wakeLock;
+      wakeLock = null;
+
+      try {
+        await lock.release();
+      } catch (error) {
+        // すでに解放済みの場合は何もしない。
+      }
+    }
+
+
+    function isFullscreenSupported() {
+      const element = document.documentElement;
+      return Boolean(
+        element.requestFullscreen ||
+        element.webkitRequestFullscreen ||
+        element.msRequestFullscreen
+      );
+    }
+
+    function isFullscreenActive() {
+      return Boolean(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      );
+    }
+
+    async function toggleFullscreen() {
+      fullscreenErrorMessage = '';
+
+      if (!isFullscreenSupported()) {
+        fullscreenErrorMessage = '非対応';
+        updateFooterMeta();
+        return;
+      }
+
+      try {
+        if (isFullscreenActive()) {
+          await exitFullscreen();
+        } else {
+          await requestFullscreen();
+        }
+      } catch (error) {
+        fullscreenErrorMessage = error?.message || '失敗';
+      }
+
+      updateFooterMeta();
+    }
+
+    async function requestFullscreen() {
+      const element = document.documentElement;
+
+      if (element.requestFullscreen) {
+        await element.requestFullscreen();
+        return;
+      }
+
+      if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+        return;
+      }
+
+      if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+    }
+
+    async function exitFullscreen() {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+        return;
+      }
+
+      if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+
+    function updateInstallHint() {
+      const hint = document.getElementById('install-hint');
+      const body = document.getElementById('install-hint-body');
+      if (!hint || !body) return;
+
+      const dismissed = loadInstallHintDismissed();
+      const standalone = isStandaloneDisplay();
+      const shouldShow = dashboardSettings.showInstallHint && !dismissed && !standalone;
+      hint.hidden = !shouldShow;
+
+      if (!shouldShow) return;
+
+      body.textContent = getInstallHintText();
+    }
+
+    function getInstallHintText() {
+      const userAgent = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isAndroid = /Android/.test(userAgent);
+
+      if (isIOS) {
+        return '共有ボタン → 「ホーム画面に追加」で、SafariのUIを減らして開けます。';
+      }
+
+      if (isAndroid) {
+        return 'ブラウザのメニュー → 「ホーム画面に追加」または「アプリをインストール」で開けます。';
+      }
+
+      return 'ブラウザのメニューから「ホーム画面に追加」または「アプリをインストール」を選べます。';
+    }
+
+    function isStandaloneDisplay() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function loadInstallHintDismissed() {
+      try {
+        return localStorage.getItem(INSTALL_HINT_STORAGE_KEY) === 'true';
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function dismissInstallHint() {
+      try {
+        localStorage.setItem(INSTALL_HINT_STORAGE_KEY, 'true');
+      } catch (error) {
+        // localStorageが使えない端末では、その場だけ閉じる。
+      }
+
+      const hint = document.getElementById('install-hint');
+      if (hint) hint.hidden = true;
+    }
+
+    function normalizeClientSettings(settings) {
+      const merged = {
+        ...DEFAULT_DASHBOARD_SETTINGS,
+        ...(settings || {}),
+      };
+
+      return {
+        nightStart: normalizeClockText(merged.nightStart, DEFAULT_DASHBOARD_SETTINGS.nightStart),
+        nightEnd: normalizeClockText(merged.nightEnd, DEFAULT_DASHBOARD_SETTINGS.nightEnd),
+        showSeconds: normalizeBoolean(merged.showSeconds, DEFAULT_DASHBOARD_SETTINGS.showSeconds),
+        refreshMinutes: clampNumber(merged.refreshMinutes, 1, 60, DEFAULT_DASHBOARD_SETTINGS.refreshMinutes),
+        burnInShiftMinutes: clampNumber(merged.burnInShiftMinutes, 1, 60, DEFAULT_DASHBOARD_SETTINGS.burnInShiftMinutes),
+        burnInShiftAmount: clampNumber(merged.burnInShiftAmount, 0, 40, DEFAULT_DASHBOARD_SETTINGS.burnInShiftAmount),
+        maxTodayEvents: Math.round(clampNumber(merged.maxTodayEvents, 0, 20, DEFAULT_DASHBOARD_SETTINGS.maxTodayEvents)),
+        maxTomorrowEvents: Math.round(clampNumber(merged.maxTomorrowEvents, 0, 20, DEFAULT_DASHBOARD_SETTINGS.maxTomorrowEvents)),
+        maxTomorrowPeriods: Math.round(clampNumber(merged.maxTomorrowPeriods, 0, 20, DEFAULT_DASHBOARD_SETTINGS.maxTomorrowPeriods)),
+        defaultMode: modes.includes(merged.defaultMode) ? merged.defaultMode : DEFAULT_DASHBOARD_SETTINGS.defaultMode,
+        nightOpacity: clampNumber(merged.nightOpacity, 0.1, 1, DEFAULT_DASHBOARD_SETTINGS.nightOpacity),
+        nightBrightness: clampNumber(merged.nightBrightness, 0.1, 1, DEFAULT_DASHBOARD_SETTINGS.nightBrightness),
+        appName: normalizeTextSetting(merged.appName, DEFAULT_DASHBOARD_SETTINGS.appName, 32),
+        shortName: normalizeTextSetting(merged.shortName, merged.appName || DEFAULT_DASHBOARD_SETTINGS.shortName, 16),
+        themeColor: normalizeColorText(merged.themeColor, DEFAULT_DASHBOARD_SETTINGS.themeColor),
+        backgroundColor: normalizeColorText(merged.backgroundColor, DEFAULT_DASHBOARD_SETTINGS.backgroundColor),
+        faviconUrl: normalizeUrlText(merged.faviconUrl, DEFAULT_DASHBOARD_SETTINGS.faviconUrl),
+        appleTouchIconUrl: normalizeUrlText(merged.appleTouchIconUrl, DEFAULT_DASHBOARD_SETTINGS.appleTouchIconUrl),
+        icon192Url: normalizeUrlText(merged.icon192Url, DEFAULT_DASHBOARD_SETTINGS.icon192Url),
+        icon512Url: normalizeUrlText(merged.icon512Url, DEFAULT_DASHBOARD_SETTINGS.icon512Url),
+        enableWakeLock: normalizeBoolean(merged.enableWakeLock, DEFAULT_DASHBOARD_SETTINGS.enableWakeLock),
+        enableFullscreen: normalizeBoolean(merged.enableFullscreen, DEFAULT_DASHBOARD_SETTINGS.enableFullscreen),
+        showInstallHint: normalizeBoolean(merged.showInstallHint, DEFAULT_DASHBOARD_SETTINGS.showInstallHint),
+        showTermLabel: normalizeBoolean(merged.showTermLabel, DEFAULT_DASHBOARD_SETTINGS.showTermLabel),
+        currentTerm: normalizeTextSetting(merged.currentTerm, DEFAULT_DASHBOARD_SETTINGS.currentTerm, 32),
+      };
+    }
+
+    function applySettings() {
+      document.body.dataset.showSeconds = dashboardSettings.showSeconds ? 'true' : 'false';
+      document.documentElement.style.setProperty('--night-opacity', dashboardSettings.nightOpacity);
+      document.documentElement.style.setProperty('--night-brightness', dashboardSettings.nightBrightness);
+      document.title = dashboardSettings.appName;
+
+      const themeMeta = document.getElementById('theme-color-meta');
+      if (themeMeta) themeMeta.setAttribute('content', dashboardSettings.themeColor);
+
+      updateIconLinks();
+      updateBurnInShift();
+      updateInstallHint();
+      scheduleAutoRefresh();
+    }
+
+    function updateIconLinks() {
+      const favicon = dashboardSettings.faviconUrl
+        || dashboardSettings.icon192Url
+        || dashboardSettings.appleTouchIconUrl
+        || '';
+
+      const appleTouchIcon = dashboardSettings.appleTouchIconUrl
+        || dashboardSettings.icon192Url
+        || dashboardSettings.icon512Url
+        || dashboardSettings.faviconUrl
+        || '';
+
+      updateLinkHref('favicon-link', favicon);
+      updateLinkHref('apple-touch-icon-link', appleTouchIcon);
+    }
+
+    function updateLinkHref(id, href) {
+      if (!href) return;
+      const link = document.getElementById(id);
+      if (link) link.setAttribute('href', href);
+    }
+
+    function applyDefaultModeFromSettings() {
+      if (hasAppliedDefaultMode) return;
+
+      modeIndex = modes.indexOf(dashboardSettings.defaultMode);
+      if (modeIndex < 0) modeIndex = 0;
+      document.body.dataset.mode = getCurrentMode();
+      hasAppliedDefaultMode = true;
+    }
+
+    function scheduleAutoRefresh() {
+      if (autoRefreshTimerId) {
+        clearInterval(autoRefreshTimerId);
+      }
+
+      const minutes = Math.max(1, Number(dashboardSettings.refreshMinutes) || DEFAULT_DASHBOARD_SETTINGS.refreshMinutes);
+      autoRefreshTimerId = setInterval(() => loadData(), minutes * 60 * 1000);
+    }
+
+    function normalizeBoolean(value, fallback) {
+      if (value === true || value === false) return value;
+
+      const text = String(value || '').trim().toLowerCase();
+      if (['true', 'yes', 'y', 'on', '1'].includes(text)) return true;
+      if (['false', 'no', 'n', 'off', '0'].includes(text)) return false;
+
+      return fallback;
+    }
+
+    function clampNumber(value, min, max, fallback) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.min(max, Math.max(min, number));
+    }
+
+    function normalizeClockText(value, fallback) {
+      const text = String(value || '').trim();
+      return /^\d{1,2}:\d{2}$/.test(text) ? text.padStart(5, '0') : fallback;
+    }
+
+    function normalizeTextSetting(value, fallback, maxLength) {
+      const text = String(value || '').trim();
+      return text ? text.slice(0, maxLength) : fallback;
+    }
+
+    function normalizeColorText(value, fallback) {
+      const text = String(value || '').trim();
+      return /^#[0-9a-fA-F]{6}$/.test(text) ? text : fallback;
+    }
+
+    function normalizeUrlText(value, fallback) {
+      const text = String(value || '').trim();
+      if (!text) return fallback || '';
+      if (text.length > 4096) return fallback || '';
+
+      if (/^https:\/\/.+\.(png|ico|jpg|jpeg|svg|webp)(\?.*)?$/i.test(text)) {
+        return text;
+      }
+
+      if (/^data:image\/(png|jpeg|webp|svg\+xml);/i.test(text)) {
+        return text;
+      }
+
+      return fallback || '';
+    }
+
+    function parseClockMinutes(value, fallback) {
+      const text = normalizeClockText(value, '');
+      if (!text) return fallback;
+
+      const [hour, minute] = text.split(':').map(Number);
+      if (!Number.isFinite(hour) || !Number.isFinite(minute)) return fallback;
+      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return fallback;
+
+      return hour * 60 + minute;
+    }
+
+    function formatTime(ms) {
+      const d = new Date(ms);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function renderVacationInfo(dayData) {
+      const label = dayData?.termLabel || '休業期間';
+      const memo = dayData?.termMemo || dayData?.scheduleMemo || '';
+      return memo
+        ? `${escapeHtml(label)}<div class="memo">${escapeHtml(memo)}</div>`
+        : escapeHtml(label);
+    }
+
+    function renderPeriodInfo(period) {
+      const subject = period.subject || '予定なし';
+
+      const status = period.status && period.status !== '変更'
+        ? `<span class="status">${escapeHtml(period.status)}</span>`
+        : '';
+
+      const room = period.room
+        ? `<span class="room">@${escapeHtml(period.room)}</span>`
+        : '';
+
+      const memo = period.memo
+        ? `<div class="memo">${escapeHtml(period.memo)}</div>`
+        : '';
+
+      return `${escapeHtml(subject)}${status}${room}${memo}`;
+    }
+
+    document.addEventListener('click', () => {
+      cycleMode();
+    });
+
+    document.getElementById('refresh-button').addEventListener('click', event => {
+      event.stopPropagation();
+      loadData({ force: true });
+    });
+
+    document.getElementById('night-toggle').addEventListener('click', event => {
+      event.stopPropagation();
+      toggleNightOverride();
+    });
+
+    document.getElementById('night-reset').addEventListener('click', event => {
+      event.stopPropagation();
+      resetNightOverride();
+    });
+
+    document.getElementById('wake-toggle').addEventListener('click', event => {
+      event.stopPropagation();
+      toggleWakeLock();
+    });
+
+    document.getElementById('fullscreen-toggle').addEventListener('click', event => {
+      event.stopPropagation();
+      toggleFullscreen();
+    });
+
+    document.getElementById('install-hint').addEventListener('click', event => {
+      event.stopPropagation();
+    });
+
+    document.getElementById('install-hint-close').addEventListener('click', event => {
+      event.stopPropagation();
+      dismissInstallHint();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock().then(updateFooterMeta);
+      }
+    });
+
+    document.addEventListener('fullscreenchange', updateFooterMeta);
+    document.addEventListener('webkitfullscreenchange', updateFooterMeta);
+    document.addEventListener('MSFullscreenChange', updateFooterMeta);
+
+    document.addEventListener('keydown', event => {
+      if (event.target?.closest?.('button')) return;
+
+      if (event.key === ' ' || event.key === 'Enter') {
+        cycleMode();
+      }
+    });
+
+    applySettings();
+    updateBurnInShift();
+    loadData();
+
+    // 時計・残り時間・秒表示・夜間モードは端末側で毎秒更新
+    setInterval(render, 1000);
+
+    // 焼き付き防止: 1分ごとに設定値を見て位置を更新
+    setInterval(updateBurnInShift, 60 * 1000);
+
+    // データ再取得間隔はsettingシートの refreshMinutes で決まる
+  </script>
+</body>
+</html>
