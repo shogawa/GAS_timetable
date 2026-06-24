@@ -1,0 +1,645 @@
+<!doctype html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= appName ?> Legacy</title>
+  <style type="text/css">
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #05070a;
+      color: #f5f7fb;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100%;
+      font-size: 18px;
+    }
+
+    #wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .topbar {
+      margin-bottom: 14px;
+      color: #aab4c8;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border: 1px solid #334055;
+      border-radius: 14px;
+      background: #111827;
+      color: #d8e0ef;
+    }
+
+    #dateLine {
+      font-size: 26px;
+      color: #c4ccda;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+
+    #metaLine {
+      font-size: 18px;
+      color: #9aa6bb;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+
+    #clock {
+      margin: 6px 0 18px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    #clockMain {
+      font-size: 116px;
+      font-weight: bold;
+      letter-spacing: -6px;
+    }
+
+    #clockSeconds {
+      font-size: 42px;
+      color: #bec8d8;
+      margin-left: 8px;
+      vertical-align: baseline;
+    }
+
+    .panel {
+      background: #111827;
+      border: 1px solid #263044;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    #periodLine {
+      font-size: 46px;
+      font-weight: bold;
+      line-height: 1.18;
+      margin-bottom: 8px;
+    }
+
+    #subjectLine {
+      font-size: 34px;
+      line-height: 1.2;
+      color: #eef3ff;
+      margin-bottom: 8px;
+    }
+
+    #remainingLine {
+      font-size: 24px;
+      color: #c1cad8;
+      line-height: 1.3;
+    }
+
+    .card {
+      background: #0d1320;
+      border: 1px solid #263044;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 25px;
+      color: #d5ddec;
+    }
+
+    .item {
+      border-top: 1px solid #273247;
+      padding: 10px 0;
+      line-height: 1.38;
+      font-size: 22px;
+    }
+
+    .item:first-child {
+      border-top: 0;
+    }
+
+    .activeItem {
+      background: #172033;
+      margin-left: -8px;
+      margin-right: -8px;
+      padding-left: 8px;
+      padding-right: 8px;
+      border-radius: 12px;
+    }
+
+    .sub {
+      display: block;
+      color: #9faabd;
+      font-size: 16px;
+      margin-top: 3px;
+    }
+
+    .muted {
+      color: #8793a8;
+    }
+
+    .status {
+      display: inline-block;
+      color: #dbe6f8;
+      background: #263044;
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-size: 15px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    #footer {
+      color: #9aa6bb;
+      font-size: 16px;
+      line-height: 1.8;
+      padding: 8px 0 18px;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 8px 12px;
+      margin: 4px 6px 4px 0;
+      color: #f5f7fb;
+      background: #1d2638;
+      border: 1px solid #3a465c;
+      border-radius: 10px;
+      -webkit-appearance: none;
+    }
+
+    .error {
+      color: #ffd0d0;
+      background: #3a1515;
+      border-color: #7d2b2b;
+    }
+
+    body.night {
+      background: #000000;
+      color: #cbd5e4;
+    }
+
+    body.night #wrap {
+      opacity: 0.52;
+    }
+
+    body.night .panel,
+    body.night .card,
+    body.night .badge {
+      background: #050505;
+      border-color: #1b1b1b;
+    }
+
+    @media screen and (max-width: 700px) {
+      #wrap {
+        padding: 14px;
+      }
+      #clockMain {
+        font-size: 74px;
+        letter-spacing: -4px;
+      }
+      #clockSeconds {
+        font-size: 28px;
+      }
+      #periodLine {
+        font-size: 34px;
+      }
+      #subjectLine {
+        font-size: 26px;
+      }
+      .item {
+        font-size: 19px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div class="topbar">
+      <span class="badge">Legacy表示</span>
+      <span class="muted"> 古いiPad向け簡易版</span>
+    </div>
+
+    <div id="dateLine">読み込み中...</div>
+    <div id="metaLine">データ取得中</div>
+
+    <div id="clock">
+      <span id="clockMain">--:--</span><span id="clockSeconds">--</span>
+    </div>
+
+    <div id="mainPanel" class="panel">
+      <div id="periodLine">読み込み中</div>
+      <div id="subjectLine"></div>
+      <div id="remainingLine" class="muted"></div>
+    </div>
+
+    <div class="card">
+      <h2>次</h2>
+      <div id="nextBox" class="muted">読み込み中...</div>
+    </div>
+
+    <div class="card">
+      <h2>今日の予定</h2>
+      <div id="eventsBox" class="muted">読み込み中...</div>
+    </div>
+
+    <div class="card">
+      <h2>今日の時間割</h2>
+      <div id="todayPeriodsBox" class="muted">読み込み中...</div>
+    </div>
+
+    <div class="card">
+      <h2>明日</h2>
+      <div id="tomorrowBox" class="muted">読み込み中...</div>
+    </div>
+
+    <div id="footer">
+      <span id="loadedLine">更新 --:--</span><br>
+      <button id="reloadButton" type="button">再読込</button>
+      <button id="nightButton" type="button">夜間: 自動</button>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="panel error">JavaScriptが無効です。ブラウザ設定でJavaScriptを有効にしてください。</div>
+  </noscript>
+
+  <script type="text/javascript">
+  /*
+    legacy.html
+    - 古い iPad Safari でも読みやすいように、クライアント側は ES5 相当で記述。
+    - let / const / => / template literal / spread / classList / fetch / Promise / CSS Grid / CSS変数 は不使用。
+    - GAS側の getDashboardData() は既存のものをそのまま使う想定。
+  */
+  (function () {
+    var dashboardData = null;
+    var lastLoadedAt = null;
+    var reloadTimer = null;
+    var nightState = 'auto';
+    var defaultSettings = {
+      showSeconds: true,
+      refreshMinutes: 5,
+      maxTodayEvents: 5,
+      maxTomorrowPeriods: 5,
+      nightStart: '22:00',
+      nightEnd: '06:00',
+      showTermLabel: true
+    };
+
+    function el(id) {
+      return document.getElementById(id);
+    }
+
+    function esc(value) {
+      var text = String(value === null || value === undefined ? '' : value);
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function pad2(value) {
+      value = String(value);
+      return value.length < 2 ? '0' + value : value;
+    }
+
+    function getSettings() {
+      var result = {};
+      var key;
+      for (key in defaultSettings) {
+        if (Object.prototype.hasOwnProperty.call(defaultSettings, key)) {
+          result[key] = defaultSettings[key];
+        }
+      }
+      if (dashboardData && dashboardData.settings) {
+        for (key in dashboardData.settings) {
+          if (Object.prototype.hasOwnProperty.call(dashboardData.settings, key)) {
+            result[key] = dashboardData.settings[key];
+          }
+        }
+      }
+      return result;
+    }
+
+    function formatClock(date) {
+      return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
+    }
+
+    function formatSeconds(date) {
+      return pad2(date.getSeconds());
+    }
+
+    function formatDate(date) {
+      var weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + weekdays[date.getDay()] + '曜日';
+    }
+
+    function formatTimeFromMs(ms) {
+      var date = new Date(ms);
+      return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
+    }
+
+    function timeText(period) {
+      if (!period) return '';
+      return String(period.start || '') + '-' + String(period.end || '');
+    }
+
+    function toMinutes(hhmm) {
+      var parts;
+      if (!hhmm) return 0;
+      parts = String(hhmm).split(':');
+      if (parts.length < 2) return 0;
+      return Number(parts[0]) * 60 + Number(parts[1]);
+    }
+
+    function isAutoNight(now, settings) {
+      var current = now.getHours() * 60 + now.getMinutes();
+      var start = toMinutes(settings.nightStart || '22:00');
+      var end = toMinutes(settings.nightEnd || '06:00');
+      if (start === end) return false;
+      if (start < end) {
+        return current >= start && current < end;
+      }
+      return current >= start || current < end;
+    }
+
+    function updateNight() {
+      var settings = getSettings();
+      var active = false;
+      if (nightState === 'on') active = true;
+      if (nightState === 'off') active = false;
+      if (nightState === 'auto') active = isAutoNight(new Date(), settings);
+      document.body.className = active ? 'night' : '';
+      el('nightButton').innerHTML = '夜間: ' + (nightState === 'auto' ? '自動' : (nightState === 'on' ? 'ON' : 'OFF'));
+    }
+
+    function cycleNight() {
+      if (nightState === 'auto') {
+        nightState = 'on';
+      } else if (nightState === 'on') {
+        nightState = 'off';
+      } else {
+        nightState = 'auto';
+      }
+      updateNight();
+    }
+
+    function findCurrentAndNext(periods, nowMs) {
+      var result = { current: null, next: null };
+      var i;
+      var p;
+      if (!periods || !periods.length) return result;
+      for (i = 0; i < periods.length; i++) {
+        p = periods[i];
+        if (p && nowMs >= Number(p.startMs) && nowMs < Number(p.endMs)) {
+          result.current = p;
+          break;
+        }
+      }
+      for (i = 0; i < periods.length; i++) {
+        p = periods[i];
+        if (p && Number(p.startMs) > nowMs) {
+          result.next = p;
+          break;
+        }
+      }
+      return result;
+    }
+
+    function renderMeta() {
+      var today;
+      var settings;
+      var pieces = [];
+      if (!dashboardData || !dashboardData.today) return;
+      today = dashboardData.today;
+      settings = getSettings();
+      if (today.scheduleType) pieces.push(today.scheduleType);
+      if (today.scheduleMemo) pieces.push(today.scheduleMemo);
+      if (today.isVacation) pieces.push('休業');
+      if (today.isSubstituteTimetableDay) pieces.push(today.timetableDayLabel + '曜授業');
+      if (settings.showTermLabel && today.termLabel) pieces.push(today.termLabel);
+      if (pieces.length) {
+        el('metaLine').innerHTML = esc(pieces.join(' ｜ '));
+      } else {
+        el('metaLine').innerHTML = '&nbsp;';
+      }
+    }
+
+    function renderMain() {
+      var nowMs = (new Date()).getTime();
+      var today;
+      var found;
+      var current;
+      var next;
+      var minutesLeft;
+      var subject;
+      var room;
+      var status;
+      if (!dashboardData || !dashboardData.today) return;
+      today = dashboardData.today;
+      found = findCurrentAndNext(today.periodsToday, nowMs);
+      current = found.current;
+      next = found.next;
+
+      if (today.isVacation) {
+        el('periodLine').innerHTML = '休業期間';
+        el('subjectLine').innerHTML = esc(today.termMemo || today.scheduleMemo || today.termLabel || '授業はありません');
+        el('remainingLine').innerHTML = '';
+        el('nextBox').innerHTML = '<span class="muted">本日の時程はありません</span>';
+        return;
+      }
+
+      if (current) {
+        minutesLeft = Math.ceil((Number(current.endMs) - nowMs) / 60000);
+        if (minutesLeft < 0) minutesLeft = 0;
+        subject = current.subject || current.label || '';
+        room = current.room ? ' <span class="sub">教室: ' + esc(current.room) + '</span>' : '';
+        status = current.status ? ' <span class="status">' + esc(current.status) + '</span>' : '';
+        el('periodLine').innerHTML = esc(current.label || '') + status;
+        el('subjectLine').innerHTML = esc(subject) + room;
+        el('remainingLine').innerHTML = '終了まで約' + minutesLeft + '分 ｜ ' + esc(timeText(current));
+      } else if (next) {
+        el('periodLine').innerHTML = '授業時間外';
+        el('subjectLine').innerHTML = '次は ' + esc(next.label || '次の時限');
+        el('remainingLine').innerHTML = esc(timeText(next));
+      } else {
+        el('periodLine').innerHTML = '本日の時程は終了';
+        el('subjectLine').innerHTML = '';
+        el('remainingLine').innerHTML = '';
+      }
+
+      if (next) {
+        el('nextBox').innerHTML = makePeriodItem(next, false);
+      } else {
+        el('nextBox').innerHTML = '<span class="muted">次の時限はありません</span>';
+      }
+    }
+
+    function makePeriodItem(period, active) {
+      var html = '';
+      var subject = period.subject || period.label || '';
+      var label = period.label || '';
+      var status = period.status ? ' <span class="status">' + esc(period.status) + '</span>' : '';
+      var room = period.room ? ' / ' + period.room : '';
+      var memo = period.memo ? '<span class="sub">' + esc(period.memo) + '</span>' : '';
+      html += '<div class="item' + (active ? ' activeItem' : '') + '">';
+      html += esc(period.start || '') + '-' + esc(period.end || '') + '　';
+      html += esc(label) + status;
+      html += '<span class="sub">' + esc(subject + room) + '</span>';
+      html += memo;
+      html += '</div>';
+      return html;
+    }
+
+    function renderPeriods(boxId, periods, limit, nowMs) {
+      var html = '';
+      var i;
+      var p;
+      var active;
+      var count = 0;
+      if (!periods || !periods.length) {
+        el(boxId).innerHTML = '<span class="muted">表示する時程はありません</span>';
+        return;
+      }
+      for (i = 0; i < periods.length; i++) {
+        if (limit && count >= limit) break;
+        p = periods[i];
+        if (!p) continue;
+        active = nowMs >= Number(p.startMs) && nowMs < Number(p.endMs);
+        html += makePeriodItem(p, active);
+        count++;
+      }
+      el(boxId).innerHTML = html || '<span class="muted">表示する時程はありません</span>';
+    }
+
+    function renderEvents() {
+      var settings = getSettings();
+      var events;
+      var max;
+      var i;
+      var ev;
+      var html = '';
+      var time;
+      if (!dashboardData || !dashboardData.today) return;
+      events = dashboardData.today.events || [];
+      max = Number(settings.maxTodayEvents || 5);
+      if (!events.length || max <= 0) {
+        el('eventsBox').innerHTML = '<span class="muted">今日の予定はありません</span>';
+        return;
+      }
+      for (i = 0; i < events.length && i < max; i++) {
+        ev = events[i];
+        time = ev.isAllDay ? '終日' : formatTimeFromMs(ev.startMs);
+        html += '<div class="item">' + esc(time) + '　' + esc(ev.title || '') + '</div>';
+      }
+      el('eventsBox').innerHTML = html;
+    }
+
+    function renderStatic() {
+      var settings = getSettings();
+      var nowMs = (new Date()).getTime();
+      if (!dashboardData || !dashboardData.today) return;
+      el('dateLine').innerHTML = esc(dashboardData.today.dateLabel || formatDate(new Date()));
+      renderMeta();
+      renderEvents();
+      renderPeriods('todayPeriodsBox', dashboardData.today.periodsToday || [], 0, nowMs);
+      if (dashboardData.tomorrow) {
+        renderPeriods('tomorrowBox', dashboardData.tomorrow.periodsToday || [], Number(settings.maxTomorrowPeriods || 5), 0);
+      } else {
+        el('tomorrowBox').innerHTML = '<span class="muted">明日のデータがありません</span>';
+      }
+      renderMain();
+      updateNight();
+    }
+
+    function updateClock() {
+      var now = new Date();
+      var settings = getSettings();
+      el('clockMain').innerHTML = formatClock(now);
+      if (settings.showSeconds) {
+        el('clockSeconds').style.display = '';
+        el('clockSeconds').innerHTML = formatSeconds(now);
+      } else {
+        el('clockSeconds').style.display = 'none';
+      }
+      if (!dashboardData || !dashboardData.today) {
+        el('dateLine').innerHTML = formatDate(now);
+      }
+      renderMain();
+      updateNight();
+    }
+
+    function showError(message) {
+      el('mainPanel').className = 'panel error';
+      el('periodLine').innerHTML = '読み込み失敗';
+      el('subjectLine').innerHTML = esc(message || 'データを取得できませんでした');
+      el('remainingLine').innerHTML = '再読込を押してください';
+    }
+
+    function scheduleReload() {
+      var settings = getSettings();
+      var minutes = Number(settings.refreshMinutes || 5);
+      if (!minutes || minutes < 1) minutes = 5;
+      if (reloadTimer) window.clearTimeout(reloadTimer);
+      reloadTimer = window.setTimeout(function () {
+        refreshData(false);
+      }, minutes * 60 * 1000);
+    }
+
+    function refreshData(manual) {
+      el('mainPanel').className = 'panel';
+      el('loadedLine').innerHTML = manual ? '再読込中...' : '更新中...';
+
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        showError('google.script.run が使えません。Apps Script のWebアプリとして開いてください。');
+        el('loadedLine').innerHTML = '更新失敗';
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function (data) {
+          dashboardData = data || {};
+          lastLoadedAt = new Date();
+          renderStatic();
+          el('loadedLine').innerHTML = '更新 ' + formatClock(lastLoadedAt);
+          scheduleReload();
+        })
+        .withFailureHandler(function (error) {
+          var msg = 'データを取得できませんでした';
+          if (error && error.message) msg = error.message;
+          showError(msg);
+          el('loadedLine').innerHTML = '更新失敗 ' + formatClock(new Date());
+          scheduleReload();
+        })
+        .getDashboardData();
+    }
+
+    function init() {
+      el('reloadButton').onclick = function () { refreshData(true); };
+      el('nightButton').onclick = cycleNight;
+      updateClock();
+      window.setInterval(updateClock, 1000);
+      refreshData(false);
+    }
+
+    if (window.attachEvent) {
+      window.attachEvent('onload', init);
+    } else {
+      window.onload = init;
+    }
+  }());
+  </script>
+</body>
+</html>
